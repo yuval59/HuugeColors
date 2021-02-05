@@ -1,6 +1,7 @@
 import config from './config.js';
 import tmi from 'tmi.js';
 import axios from 'axios';
+import sdk from 'cue-sdk';
 
 let subs = ['yuval59'];
 let revoked = [];
@@ -9,6 +10,9 @@ let isHype = false;
 const validColors = ["yellow", "purple", "orange", "red", "cyan", "blue", "white", "green", "pink"]
 const makerKey = config.MAKERKEY;
 const scene_uuid = config.scene;
+
+const userName = 'Yuval_Bot';
+const connectedChannels = ['yuval59'];
 
 const headers = {
     "Authorization": "Bearer " + config.LIFXKEY,
@@ -23,14 +27,60 @@ const client = new tmi.Client({
 
     //Get OAUTH at https://twitchapps.com/tmi/
     identity: {
-        username: 'Yuval_Bot',
+        username: userName,
         password: config.OAUTH
     },
-    channels: ['yuval59']
+    channels: connectedChannels
 
 });
 
-client.connect();
+const details = sdk.CorsairPerformProtocolHandshake();
+const errCode = sdk.CorsairGetLastError();
+if (errCode === 0) {
+    // 'CE_Success'
+}
+
+const changeColor = (color => {
+
+    console.log(`--------changeColor has been called--------`);
+
+    const n = sdk.CorsairGetDeviceCount();
+
+    console.log(n);
+    const leds = []
+
+    for (let i = 0; i < n; ++i) {
+        const info = sdk.CorsairGetDeviceInfo(i);
+        const ledPositions = sdk.CorsairGetLedPositionsByDeviceIndex(i)
+        leds.push(ledPositions.map(p => ({ ledId: p.ledId, r: 0, g: 0, b: 0 })));
+
+        for (let tmp = 0; tmp < leds.length; tmp++) {
+
+            leds[tmp].forEach(led => {
+                led.r = 0
+                led.g = 230
+                led.b = 0
+            })
+        }
+
+        // // example: read device properties
+        // if (info.capsMask & sdk.CorsairDeviceCaps.CDC_PropertyLookup) {
+        //     console.log(info);
+        //     Object.keys(sdk.CorsairDevicePropertyId).forEach(p => {
+        //         const prop = sdk.CorsairGetDeviceProperty(i, sdk.CorsairDevicePropertyId[p]);
+        //         if (!prop) {
+        //             console.log(p, ':', sdk.CorsairErrorString[sdk.CorsairGetLastError()]);
+        //         } else {
+        //             console.log(p, prop.value);
+        //         }
+        //         sdk.changeColor(color);
+        //     });
+        // }
+    }
+});
+
+client.connect()
+    .then(console.log(`Connected to channels ${connectedChannels} as ${userName}`));
 
 client.on('message', (channel, tags, message, self) => {
 
@@ -77,11 +127,11 @@ client.on('message', (channel, tags, message, self) => {
                                 fast: false
                             };
 
-                            axios.put(`https://api.lifx.com/v1/lights/all/state`, data, {headers: headers})
+                            axios.put(`https://api.lifx.com/v1/lights/all/state`, data, { headers: headers })
                                 .then(function (response) {
                                     // handle success
                                     console.log(`Color change to ${color} successful`);
-                                    
+
                                 })
                                 .catch(function (error) {
                                     // handle error
@@ -93,6 +143,8 @@ client.on('message', (channel, tags, message, self) => {
                             const index = subs.indexOf(tags['display-name']);
                             subs.splice(index, 1);
                             revoked.push(tags['display-name']);
+
+                            changeColor("");
 
                         }
 
@@ -158,14 +210,14 @@ client.on('message', (channel, tags, message, self) => {
                             isHype = false;
 
                             axios.post(`http://maker.ifttt.com/trigger/white/with/key/${makerKey}`)
-                            .then(function (response) {
-                                // handle success
-                                //console.log('whatsapp message sent response >>>', response.data);
-                            })
-                            .catch(function (error) {
-                                // handle error
-                                console.error(error);
-                            });
+                                .then(function (response) {
+                                    // handle success
+                                    //console.log('whatsapp message sent response >>>', response.data);
+                                })
+                                .catch(function (error) {
+                                    // handle error
+                                    console.error(error);
+                                });
 
                             break;
                         }
