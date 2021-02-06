@@ -6,7 +6,7 @@ import axios from 'axios';
 const headers = {
     "Authorization": "Bearer " + config.LIFXKEY,
 };
-
+const scene_uuid = config.scene;
 
 //------------------------------\\
 //                              \\
@@ -35,12 +35,7 @@ export const changeLifxColor = (color) => {
 };
 
 export const lifxHype = () => {
-    const moveData = {
-        direction: 'backward',
-        period: 4,
-        fast: false
-    };
-
+    
     const sceneData = {
         fast: true
     };
@@ -55,6 +50,17 @@ export const lifxHype = () => {
             console.error(error);
         });
 
+    setTimeout(() => postMove(), 500);
+};
+
+function postMove(){
+
+    const moveData = {
+        direction: 'backward',
+        period: 4,
+        fast: false
+    };
+
     axios.post(`https://api.lifx.com/v1/lights/all/effects/move`, moveData, { headers: headers })
         .then(function (response) {
             // handle success
@@ -63,5 +69,5 @@ export const lifxHype = () => {
         .catch(function (error) {
             // handle error
             console.error(error);
-        });
-};
+        })
+}

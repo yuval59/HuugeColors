@@ -3,7 +3,7 @@ import tmi from 'tmi.js';
 import axios from 'axios';
 import sdk from 'cue-sdk';
 import { changeIcueColor, doRainbow, pulse } from './ICUE.js';
-import { changeLifxColor } from './Lifx.js';
+import { changeLifxColor, lifxHype } from './Lifx.js';
 
 let subs = [];
 let revoked = [];
@@ -15,7 +15,6 @@ const validColors = ["yellow", "purple", "orange", "red", "cyan", "blue", "white
 
 const userName = 'Yuval_Bot';
 const connectedChannels = ['yuval59'];
-
 
 const client = new tmi.Client({
 
@@ -182,16 +181,42 @@ client.on('message', (channel, tags, message, self) => {
 
 });
 
-client.on('subscription', (channel, tags, username) => {
-    console.log(`${tags['display-name']} has subscribed`);
-    if (!subs.includes(tags['display-name'])) {
-        subs.push(username);
-    }
+client.on('subscription', (channel, username, methods, msg, tags) => {
+
+    console.log("-----------subscription event has been called-----------")
+
+    console.log(`${username} has subscribed to ${channel}`);
+
+    subs.push(username);
+
 });
 
-client.on('resub', (channel, tags, username) => {
-    console.log(`${tags['display-name']} has re-subscribed`);
-    if (!subs.includes(tags['display-name'])) {
+client.on('resub', (channel, username, streakMonths, msg, tags, methods) => {
+
+    console.log("-----------resub event has been called-----------")
+
+    console.log(`${username} has re-subscribed to ${channel}`);
+
+    subs.push(username);
+
+});
+
+client.on("subgift", (channel, username, recipient, methods, tags, userstate) => {   
+
+    console.log("-----------subgift event has been called-----------")
+
+    subs.push(userstate["msg-param-recipient-display-name"]);
+
+    console.log(subs);
+
+});
+
+client.on("submysterygift", (channel, username, giftSubCount, methods, tag) => {
+
+    console.log("-----------submysterygift event has been called-----------")
+
+    if (giftSubCount >= 5) {
         subs.push(username);
     }
+
 });
