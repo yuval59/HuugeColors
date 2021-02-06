@@ -1,6 +1,5 @@
 import config from './config.js';
 import tmi from 'tmi.js';
-import axios from 'axios';
 import sdk from 'cue-sdk';
 import { changeIcueColor, doRainbow, pulse } from './ICUE.js';
 import { changeLifxColor, lifxHype } from './Lifx.js';
@@ -13,8 +12,8 @@ let isPulse = false;
 const authorizedUsers = ["yuval59", "Huuge"];
 const validColors = ["yellow", "purple", "orange", "red", "cyan", "blue", "white", "green", "pink"];
 
-const userName = 'Yuval_Bot';
-const connectedChannels = ['yuval59'];
+const userName = 'HuugeBot';
+const connectedChannels = ['Huuge'];
 
 const client = new tmi.Client({
 
@@ -54,11 +53,6 @@ client.on('message', (channel, tags, message, self) => {
     if (message.length == 2 && n == "!") {
 
         switch (message[0]) {
-
-            default: {
-                client.say(channel, `Sorry @${tags['display-name']}, ${message[0]} is not a command`)
-                break;
-            }
 
             case ("!color"): {
 
