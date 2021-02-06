@@ -2,7 +2,8 @@ import config from './config.js';
 import tmi from 'tmi.js';
 import axios from 'axios';
 import sdk from 'cue-sdk';
-import { changeColor, doRainbow, pulse } from './ICUE.js';
+import { changeIcueColor, doRainbow, pulse } from './ICUE.js';
+import { changeLifxColor } from './Lifx.js';
 
 let subs = [];
 let revoked = [];
@@ -11,15 +12,10 @@ let isPulse = false;
 
 const authorizedUsers = ["yuval59", "Huuge"];
 const validColors = ["yellow", "purple", "orange", "red", "cyan", "blue", "white", "green", "pink"];
-const makerKey = config.MAKERKEY;
-const scene_uuid = config.scene;
 
 const userName = 'HuugeBot';
 const connectedChannels = ['Huuge'];
 
-const headers = {
-    "Authorization": "Bearer " + config.LIFXKEY,
-};
 
 const client = new tmi.Client({
 
@@ -52,9 +48,11 @@ client.on('message', (channel, tags, message, self) => {
 
     let color = 'default';
 
+    const n = message[0];
+
     message = message.toLowerCase().split(' ');
 
-    if (message.length == 2) {
+    if (message.length == 2 && n == "!") {
 
         switch (message[0]) {
 
@@ -64,13 +62,19 @@ client.on('message', (channel, tags, message, self) => {
             }
 
             case ("!color"): {
+
+                if(message[1]=="list"){
+                    client.say(channel,`Hi @${tags['display-name']} - the current available colors are Yellow, Purple, Orange, Red, Cyan, Blue, White, Green, Pink`)
+                    break;
+                }
+
                 if (isHype) {
 
                     client.say(channel, `Sorry @${tags['display-name']}, the stream lights are currently in hype mode`)
 
                 } else {
 
-                    if (subs.includes(tags['display-name'])) {
+                    if (subs.includes(tags['display-name']) || authorizedUsers.includes(tags['display-name'])) {
 
                         if (validColors.includes(message[1])) {
 
@@ -84,30 +88,17 @@ client.on('message', (channel, tags, message, self) => {
 
                         if (color != 'default') {
 
-                            const data = {
-                                color: color,
-                                brightness: 1,
-                                fast: false
-                            };
-
-                            changeColor(color);
-
-                            axios.put(`https://api.lifx.com/v1/lights/all/state`, data, { headers: headers })
-                                .then(function (response) {
-                                    // handle success
-                                    console.log(`Color change to ${color} successful`);
-
-                                })
-                                .catch(function (error) {
-                                    // handle error
-                                    console.error(error);
-                                });
+                            changeIcueColor(color);
+                            changeLifxColor(color);
 
                             client.say(channel, `@${tags['display-name']} has changed the color of the lights to ${color}`);
 
-                            const index = subs.indexOf(tags['display-name']);
-                            subs.splice(index, 1);
-                            revoked.push(tags['display-name']);
+                            if (!authorizedUsers.includes(tags['display-name'])) {
+
+                                const index = subs.indexOf(tags['display-name']);
+                                subs.splice(index, 1);
+                                revoked.push(tags['display-name']);
+                            }
 
                         }
 
@@ -141,36 +132,7 @@ client.on('message', (channel, tags, message, self) => {
                             isHype = true;
 
                             doRainbow();
-
-                            const moveData = {
-                                direction: 'backward',
-                                period: 4,
-                                fast: false
-                            };
-
-                            const sceneData = {
-                                fast: true
-                            };
-
-                            axios.put(`https://api.lifx.com/v1/scenes/scene_id:${scene_uuid}/activate`, sceneData, { headers: headers })
-                                .then(function (response) {
-                                    // handle success
-                                    console.log(`Scene change successful`);
-                                })
-                                .catch(function (error) {
-                                    // handle error
-                                    console.error(error);
-                                });
-
-                            axios.post(`https://api.lifx.com/v1/lights/all/effects/move`, moveData, { headers: headers })
-                                .then(function (response) {
-                                    // handle success
-                                    console.log(`Move successful`);
-                                })
-                                .catch(function (error) {
-                                    // handle error
-                                    console.error(error);
-                                });
+                            lifxHype();
 
                             break;
                         }
@@ -178,17 +140,7 @@ client.on('message', (channel, tags, message, self) => {
                             client.say(channel, `Stream is no longer in hype mode`);
                             isHype = false;
 
-                            axios.post(`http://maker.ifttt.com/trigger/white/with/key/${makerKey}`)
-                                .then(function (response) {
-                                    // handle success
-                                    //console.log('whatsapp message sent response >>>', response.data);
-                                })
-                                .catch(function (error) {
-                                    // handle error
-                                    console.error(error);
-                                });
-
-                            break;
+                            changeLifxColor("white");
                         }
                     }
                 }

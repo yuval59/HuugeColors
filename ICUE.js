@@ -1,3 +1,5 @@
+//This class handles all the Icue logic integration
+
 import sdk from 'cue-sdk';
 import rgb from 'hsv-rgb';
 
@@ -137,7 +139,7 @@ export async function doRainbow() {
     let currentHue = 0;
 
     setInterval(() => {
-        currentHue = (currentHue + 0.2) % 360;
+        currentHue = (currentHue + 0.5) % 360;
 
         const val = rgb(currentHue, 100, 100);
 
@@ -156,7 +158,7 @@ export async function doRainbow() {
     }, 1);
 }
 
-export const changeColor = (color) => {
+export const changeIcueColor = (color) => {
 
     const details = sdk.CorsairPerformProtocolHandshake()
     const errCode = sdk.CorsairGetLastError()
