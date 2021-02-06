@@ -13,8 +13,8 @@ let isPulse = false;
 const authorizedUsers = ["yuval59", "Huuge"];
 const validColors = ["yellow", "purple", "orange", "red", "cyan", "blue", "white", "green", "pink"];
 
-const userName = 'HuugeBot';
-const connectedChannels = ['Huuge'];
+const userName = 'Yuval_Bot';
+const connectedChannels = ['yuval59'];
 
 
 const client = new tmi.Client({

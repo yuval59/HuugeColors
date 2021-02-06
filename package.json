@@ -1,7 +1,6 @@
 {
   "name": "HuugeColors",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,7 +13,18 @@
     "cue-sdk": "^1.6.0",
     "dotenv": "^8.2.0",
     "hsv-rgb": "^1.0.0",
+    "rgb-hsv": "^1.0.0",
     "tmi.js": "^1.5.0"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuval59/HuugeColors.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yuval59/HuugeColors/issues"
+  },
+  "homepage": "https://github.com/yuval59/HuugeColors#readme",
+  "description": ""
 }
