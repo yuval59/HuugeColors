@@ -3,9 +3,12 @@
 import config from './config.js';
 import axios from 'axios';
 
+//Declare Bearer authorization
 const headers = {
     "Authorization": "Bearer " + config.LIFXKEY,
 };
+
+//Declare the scene_uuid for the rainbow color scene on the Lifx app
 const scene_uuid = config.scene;
 
 //------------------------------\\
@@ -14,6 +17,7 @@ const scene_uuid = config.scene;
 //                              \\
 //------------------------------\\
 
+//Take a color string(out of a select couple of valid colors - see validColors on app.js)
 export const changeLifxColor = (color) => {
 
     const data = {
@@ -34,6 +38,7 @@ export const changeLifxColor = (color) => {
         });
 };
 
+//Change Lifx lights to a moving rainbow
 export const lifxHype = () => {
     
     const sceneData = {
