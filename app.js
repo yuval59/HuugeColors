@@ -109,7 +109,7 @@ client.on('message', (channel, tags, message, self) => {
 
                 case ("!hype"): {
 
-                    //If the user is a moderator of the channel or an authorized user
+                    //Check if the user is a moderator of the channel or an authorized user
                     if (tags['mod'] || authorizedUsers.includes(tags['display-name'])) {
 
                         //Declare the stream in hype mode and toggle the check to true
