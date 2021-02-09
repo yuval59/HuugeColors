@@ -2,6 +2,7 @@
 
 import sdk from 'cue-sdk';
 import rgb from 'hsv-rgb';
+import hexRgb from 'hex-rgb';
 
 //Declare the constant base colors as to imitate Lifx's colors as closely as possible.
 //This is not a good, dynamic way to do this.
@@ -116,7 +117,7 @@ export async function doRainbow() {
 };
 
 //Change all LEDs to the same constant color
-export const changeIcueColor = (color) => {
+export const changeIcueColor = (color, type) => {
 
     const details = sdk.CorsairPerformProtocolHandshake()
     const errCode = sdk.CorsairGetLastError()
@@ -135,17 +136,46 @@ export const changeIcueColor = (color) => {
         exit(1)
     }
 
-    //Iterate through all available LEDs and apply the chosen color
-    for (let i = 0; i < availableLeds.length; ++i) {
+    //Received the name of the chosen color out of the list
+    if (type == 'string') {
 
-        const device_leds = availableLeds[i]
-        device_leds.forEach(led => {
-            led.r = colorDict[color].r
-            led.g = colorDict[color].g
-            led.b = colorDict[color].b
-        })
+        //Iterate through all available LEDs and apply the chosen color
+        for (let i = 0; i < availableLeds.length; ++i) {
 
-        sdk.CorsairSetLedsColorsBufferByDeviceIndex(i, device_leds)
+            const device_leds = availableLeds[i]
+            device_leds.forEach(led => {
+                led.r = colorDict[color].r
+                led.g = colorDict[color].g
+                led.b = colorDict[color].b
+            })
+
+            sdk.CorsairSetLedsColorsBufferByDeviceIndex(i, device_leds)
+        }
+
+        sdk.CorsairSetLedsColorsFlushBuffer()
+        return;
     }
-    sdk.CorsairSetLedsColorsFlushBuffer()
+
+    //Receiving hex colors
+    if (type == 'hex') {
+
+        //Iterate through all available LEDs and apply the chosen color
+        for (let i = 0; i < availableLeds.length; ++i) {
+
+            const rgbDict = hexRgb(color);
+
+            const device_leds = availableLeds[i]
+
+            device_leds.forEach(led => {
+                led.r = rgbDict.red
+                led.g = rgbDict.green
+                led.b = rgbDict.blue
+            })
+
+            sdk.CorsairSetLedsColorsBufferByDeviceIndex(i, device_leds)
+        }
+
+        sdk.CorsairSetLedsColorsFlushBuffer()
+        return;
+    }
 };

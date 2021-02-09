@@ -144,89 +144,96 @@ client.on('message', (channel, tags, message, self) => {
                     //If received !color list, type out available colors.
                     if (message[1] == "list") {
 
-                        client.say(channel, `Hi @${tags['display-name']} - the current available colors are ${colorsAsString}`)
+                        //For some ungodly reason if you place colorsAsString() in the say section it prints out the entire function instead.
+                        const tmp = colorsAsString();
+
+                        client.say(channel, `Hi @${tags['display-name']} - the current available colors are: ${tmp}`)
                         break;
 
                     }
 
-                    //If the stream is in hype mode, tell the user to fuck off
+                    //If the stream is in hype mode, tell the user to fuck off and exit
                     if (isHype) {
 
                         client.say(channel, `Sorry @${tags['display-name']}, the stream lights are currently in hype mode`)
+                        return;
 
-                        //if not
-                    } else {
+                    }
 
-                        //If the user is in the eligible subs list, or an authorized user, or a moderator of the stream - let them execute the command...
-                        if (subs.includes(tags['display-name']) || authorizedUsers.includes(tags['display-name']) || tags['mod']) {
+                    //if not
 
-                            if (validColors.includes(message[1])) {
+                    //If the user is in the eligible subs list, or an authorized user, or a moderator of the stream - let them execute the command...
+                    if (subs.includes(tags['display-name']) || authorizedUsers.includes(tags['display-name']) || tags['mod']) {
 
-                                color = message[1];
+                        if (validColors.includes(message[1])) {
 
-                            } else {
+                            color = message[1];
 
-                                client.say(channel, `Sorry @${tags['display-name']}, "${message[1]}" is not a valid color`);
-
-                            }
-
-                            //Execute change of color if the color was not changed
-                            if (color != 'default') {
-
-                                //Check if the color has actually changed value
-                                if (color == currentColor) {
-
-                                    //If the lights have not changed color, tell the user to fuck off and exit
-                                    client.say(channel, `Sorry @${tags['display-name']}, the stream colors are already set to this color`);
-                                    return;
-
-                                }
-
-                                //--------------------------------\\
-                                //If the lights have changed color\\
-                                //--------------------------------\\
-
-                                //Change the Corsair lights to the chosen color
-                                changeIcueColor(color);
-
-                                //Change the LIFX lights to the chosen color
-                                changeLifxColor(color);
-
-                                //Set currentColor to the chosen color
-                                currentColor = color;
-
-                                client.say(channel, `@${tags['display-name']} has changed the color of the lights to ${color}`);
-
-                                //If the user calling this action is not a moderator of the channel or an authorized user
-                                if (!authorizedUsers.includes(tags['display-name']) && !tags['mod']) {
-
-                                    //Get the index of the user in the array and remove him
-                                    const index = subs.indexOf(tags['display-name']);
-                                    subs.splice(index, 1);
-
-                                    //Put him in the 'already used the command' array
-                                    revoked.push(tags['display-name']);
-                                }
-
-                            }
-
-                            //... Otherwise tell them to fuck off
                         } else {
 
-                            //Different messages depending on whether they already changed the color during the stream or just have not subscribed
-                            if (revoked.includes(tags['display-name'])) {
+                            client.say(channel, `Sorry @${tags['display-name']}, "${message[1]}" is not a valid color`);
 
-                                client.say(channel, `@${tags['display-name']}, you have already changed the stream color`)
+                        }
 
-                            } else {
+                        //Execute change of color if the color was not changed
+                        if (color != 'default') {
 
-                                client.say(channel, `@${tags['display-name']}, you have not subscribed during this stream and cannot change the stream color`)
+                            //Check if the color has actually changed value
+                            if (color == currentColor) {
 
+                                //If the lights have not changed color, tell the user to fuck off and exit
+                                client.say(channel, `Sorry @${tags['display-name']}, the stream colors are already set to this color`);
+                                return;
+
+                            }
+
+                            //--------------------------------\\
+                            //If the lights have changed color\\
+                            //--------------------------------\\
+
+                            //Change the Corsair lights to the chosen color
+                            changeIcueColor(color, 'string');
+
+                            //Change the LIFX lights to the chosen color
+                            changeLifxColor(color);
+
+                            //Set currentColor to the chosen color
+                            currentColor = color;
+
+                            client.say(channel, `@${tags['display-name']} has changed the color of the lights to ${color}`);
+
+                            //If the user calling this action is not a moderator of the channel or an authorized user
+                            if (!authorizedUsers.includes(tags['display-name']) && !tags['mod']) {
+
+                                //Get the index of the user in the array and remove him
+                                const index = subs.indexOf(tags['display-name']);
+                                subs.splice(index, 1);
+
+                                //Put him in the 'already used the command' array
+                                revoked.push(tags['display-name']);
                             }
 
                         }
 
+                        //... and exit ...
+                        return;
+
                     }
+
+                    //... Otherwise tell them to fuck off
+
+                    //Different messages depending on whether they already changed the color during the stream or just have not subscribed
+                    if (revoked.includes(tags['display-name'])) {
+
+                        client.say(channel, `@${tags['display-name']}, you have already changed the stream color`)
+
+                    } else {
+
+                        client.say(channel, `@${tags['display-name']}, you have not subscribed during this stream and cannot change the stream color`)
+
+                    }
+
+
                     break;
                 }
 
@@ -243,64 +250,81 @@ client.on('message', (channel, tags, message, self) => {
                 //When receiving command !color {something}
                 case ("!color"): {
 
-                    //If the stream is in hype mode, tell the user to fuck off
-                    if (isHype) {
+                    switch (message[1]) {
 
-                        client.say(channel, `Sorry @${tags['display-name']}, the stream lights are currently in hype mode`)
+                        default: {
 
-                        //if not
-                    } else {
+                            //The bot received the command with 2 unknown parameters, explain the syntax
+                            client.say(channel, `Hi @${tags['display-name']}, please use !color followed by the color you prefer. You can check available colors by typing !color list`)
+                            break;
 
-                        //If the user is in the eligible subs list, or an authorized user, or a moderator of the stream - let them execute the command...
-                        if (subs.includes(tags['display-name']) || authorizedUsers.includes(tags['display-name']) || tags['mod']) {
+                        }
 
-                            if (validColors.includes(message[1])) {
+                        case ('hex'): {
 
-                                color = message[1];
+                            //If the stream is in hype mode, tell the user to fuck off and exit
+                            if (isHype) {
 
-                            } else {
-
-                                client.say(channel, `Sorry @${tags['display-name']}, "${message[1]}" is not a valid color`);
-
+                                client.say(channel, `Sorry @${tags['display-name']}, the stream lights are currently in hype mode`)
+                                return;
                             }
+                            //if not
 
-                            //Execute change of color if the color was not changed
-                            if (color != 'default') {
+                            //If the user is in the eligible subs list, or an authorized user, or a moderator of the stream - let them execute the command...
+                            if (subs.includes(tags['display-name']) || authorizedUsers.includes(tags['display-name']) || tags['mod']) {
 
-                                //Check if the color has actually changed value
-                                if (color == currentColor) {
+                                color = message[2];
 
-                                    //If the lights have not changed color, tell the user to fuck off and exit this call
-                                    client.say(channel, `Sorry @${tags['display-name']}, the stream colors are already in this color`);
+                                //Check if the color received is a valid hexRGB code
+                                const regex = "^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$";
+                                if (!color.match(regex)) {
+
+                                    //If the color received is not a valid hexRGB, tell the user to fuck off and exit
+                                    client.say(channel, `Hi @${tags['display-name']}, please write a valid hexRGB color after hex`);
                                     return;
+                                }
+
+                                //Execute change of color if the color was not changed
+                                if (color != 'default') {
+
+                                    //Check if the color has actually changed value
+                                    if (color == currentColor) {
+
+                                        //If the lights have not changed color, tell the user to fuck off and exit this call
+                                        client.say(channel, `Sorry @${tags['display-name']}, the stream colors are already in this color`);
+                                        return;
+
+                                    }
+
+                                    //If the lights have changed color
+
+                                    //Change the Corsair lights to the chosen color
+                                    changeIcueColor(color, 'hex');
+
+                                    //Change the LIFX lights to the chosen color
+                                    changeLifxColor(color);
+
+                                    client.say(channel, `@${tags['display-name']} has changed the color of the lights to ${color}`);
+
+                                    //If the user calling this action is not a moderator of the channel or an authorized user
+                                    if (!authorizedUsers.includes(tags['display-name']) && !tags['mod']) {
+
+                                        //Get the index of the user in the array and remove him
+                                        const index = subs.indexOf(tags['display-name']);
+                                        subs.splice(index, 1);
+
+                                        //Put him in the 'already used the command' array
+                                        revoked.push(tags['display-name']);
+                                    }
 
                                 }
 
-                                //If the lights have changed color
-
-                                //Change the Corsair lights to the chosen color
-                                changeIcueColor(color);
-
-                                //Change the LIFX lights to the chosen color
-                                changeLifxColor(color);
-
-                                client.say(channel, `@${tags['display-name']} has changed the color of the lights to ${color}`);
-
-                                //If the user calling this action is not a moderator of the channel or an authorized user
-                                if (!authorizedUsers.includes(tags['display-name']) && !tags['mod']) {
-
-                                    //Get the index of the user in the array and remove him
-                                    const index = subs.indexOf(tags['display-name']);
-                                    subs.splice(index, 1);
-
-                                    //Put him in the 'already used the command' array
-                                    revoked.push(tags['display-name']);
-                                }
+                                //Exit after changing the colors
+                                return;
 
                             }
 
                             //... Otherwise tell them to fuck off
-                        } else {
 
                             //Different messages depending on whether they already changed the color during the stream or just have not subscribed
                             if (revoked.includes(tags['display-name'])) {
@@ -312,14 +336,17 @@ client.on('message', (channel, tags, message, self) => {
                                 client.say(channel, `@${tags['display-name']}, you have not subscribed during this stream and cannot change the stream color`)
 
                             }
-
+                            break;
                         }
 
                     }
+
                     break;
+
                 }
 
             }
+
             break;
 
         };
